@@ -1,11 +1,7 @@
 import uuid
-import logging
-from Agentic_wf.config.RAG.retriever import Retriever as ConfigRetriever
-from Agentic_wf.config.RAG.embeddings import get_embeddings
+from Agentic_wf.config import get_embeddings, Retriever as ConfigRetriever
 from Agentic_wf.agents.generate_questions.states.schemas import SessionState, Question
 from Agentic_wf.agents.generate_questions.nodes.cache_lookup import get_next_question_from_cache_or_generate
-
-logger = logging.getLogger(__name__)
 
 # Map 1-5 difficulty scale to string representation
 DIFFICULTY_MAP = {
@@ -26,8 +22,7 @@ async def retrieve_relevant_chunks(topic: str, k: int = 3) -> list[str]:
         if docs:
             return [doc.page_content for doc in docs]
         return []
-    except Exception as e:
-        logger.warning(f"Retrieval fallback (no vector DB points or error): {e}")
+    except Exception:
         return []
 
 
@@ -76,4 +71,4 @@ async def generate_question(state: SessionState) -> SessionState:
     state.questions_asked += 1
     state.question_history.append(question)
 
-    return state
+    return state

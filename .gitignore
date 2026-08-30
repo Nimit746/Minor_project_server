@@ -17,8 +17,8 @@ uv.lock
 
 *.drawio
 .env
-graph.png
 model.py
 main.py
 /tests/*
-test_agent.py
+test_*.py
+graphs

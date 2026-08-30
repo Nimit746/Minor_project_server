@@ -1,7 +1,7 @@
 import uuid
 import json
 from typing import Dict, List
-from Agentic_wf.config.llm import LLM
+from Agentic_wf.config import LLM
 from Agentic_wf.agents.generate_questions.states.schemas import Question
 from Agentic_wf.agents.generate_questions.prompts.question_generation import (
     QUESTION_GENERATION_SYSTEM_PROMPT,
@@ -137,4 +137,4 @@ async def get_next_question_from_cache_or_generate(
         question_cache[cache_key] = new_questions[1:]
         return new_questions[0]
 
-    return None
+    return None

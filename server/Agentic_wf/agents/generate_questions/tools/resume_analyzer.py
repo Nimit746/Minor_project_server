@@ -1,10 +1,7 @@
 import re
 import json
-import logging
 from typing import List, Dict, Any
 from Agentic_wf.config.llm import LLM
-
-logger = logging.getLogger(__name__)
 
 RESUME_EXTRACTION_PROMPT = """You are a technical resume parser and evaluator.
 Analyze the following resume text and extract key technical attributes.
@@ -63,8 +60,7 @@ async def analyze_resume(resume_text: str) -> Dict[str, Any]:
 
         parsed = json.loads(content)
         return parsed
-    except Exception as e:
-        logger.warning(f"LLM resume parsing failed ({e}), falling back to heuristic extraction")
+    except Exception:
         skills = extract_skills_heuristic(resume_text)
         return {
             "skills": skills or ["Python", "Data Structures"],

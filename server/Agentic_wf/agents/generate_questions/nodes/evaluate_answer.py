@@ -1,8 +1,6 @@
 from Agentic_wf.agents.generate_questions.states.schemas import SessionState
 from Agentic_wf.agents.generate_questions.nodes.llm_judge import groq_judge, run_sandbox_tests
-import logging
 
-logger = logging.getLogger(__name__)
 
 async def evaluate_answer(state: SessionState) -> SessionState:
     """
@@ -30,7 +28,6 @@ async def evaluate_answer(state: SessionState) -> SessionState:
         if state.question.rubric:
             is_correct = await groq_judge(state.candidate_answer, state.question.rubric)
         else:
-            logger.warning("No rubric provided for open-ended question - marking as incorrect")
             is_correct = False
     
     # Update state
@@ -42,8 +39,5 @@ async def evaluate_answer(state: SessionState) -> SessionState:
         
     # Update correctness history
     state.answer_correctness_history.append(is_correct)
-    
-    logger.info(f"Answer {is_correct and 'correct' or 'incorrect'}!")
-    logger.info(f"Current score: {state.score_running}/{state.questions_asked}")
     
     return state

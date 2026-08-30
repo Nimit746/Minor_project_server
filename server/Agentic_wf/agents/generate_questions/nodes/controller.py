@@ -1,7 +1,4 @@
 from Agentic_wf.agents.generate_questions.states.schemas import SessionState
-import logging
-
-logger = logging.getLogger(__name__)
 
 # List of default topics for fallback rotation
 DEFAULT_TOPICS = [
@@ -88,16 +85,11 @@ async def controller(state: SessionState) -> SessionState:
     # Adjust difficulty based on performance
     if last_two == [True, True]:
         state.current_difficulty = bump_difficulty(state.current_difficulty, 1)
-        logger.info(f"Increasing difficulty to {state.current_difficulty} (2 consecutive correct answers)")
     elif not last_answer_correct:
         state.current_difficulty = bump_difficulty(state.current_difficulty, -1)
-        logger.info(f"Decreasing difficulty to {state.current_difficulty} (last answer incorrect)")
         if state.question and state.question.topic not in state.concept_gaps:
             state.concept_gaps.append(state.question.topic)
-            logger.info(f"Added {state.question.topic} to concept gaps")
 
     # Pick the next topic
     state.current_topic = pick_next_topic(state)
-    logger.info(f"Next topic: {state.current_topic}, current difficulty: {state.current_difficulty}")
-
-    return state
+    return state

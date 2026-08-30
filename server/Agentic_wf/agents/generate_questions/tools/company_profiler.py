@@ -1,9 +1,6 @@
 import json
-import logging
-from typing import Dict, Any, List
+from typing import Dict, Any
 from Agentic_wf.config.llm import LLM
-
-logger = logging.getLogger(__name__)
 
 # Well-known company profiles for fast fallback
 KNOWN_COMPANY_PATTERNS: Dict[str, Dict[str, Any]] = {
@@ -80,8 +77,7 @@ async def get_company_profile(company_name: str, target_role: str = "Software En
 
         parsed = json.loads(content)
         return parsed
-    except Exception as e:
-        logger.warning(f"Company profiling LLM failed for {company_name} ({e}), using default profile")
+    except Exception:
         return {
             "focus_areas": ["Data structures and algorithms", "System design principles", "API development", "Database design"],
             "question_style": f"Standard technical questions for {company_name}",

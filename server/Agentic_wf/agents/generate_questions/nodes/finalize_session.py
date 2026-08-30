@@ -1,8 +1,5 @@
 from Agentic_wf.agents.generate_questions.states.schemas import SessionState
 from Agentic_wf.config.database import get_async_db
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def recompute_weak_topics(existing_weak_topics: list, concept_gaps: list) -> list:
@@ -25,10 +22,8 @@ async def finalize_session(state: SessionState) -> SessionState:
         current_session_score = 0.0
 
     state.final_session_score = current_session_score
-    logger.info(f"Finalizing session for candidate {state.candidate_id}: session score = {current_session_score:.2f}")
 
     if not state.candidate_id:
-        logger.warning("No candidate_id provided for finalize_session; skipping MongoDB persistence")
         return state
 
     try:
@@ -81,9 +76,7 @@ async def finalize_session(state: SessionState) -> SessionState:
         })
 
         state.updated_historical_avg = new_avg
-        logger.info(f"Successfully finalized and persisted session for candidate {state.candidate_id}")
         return state
 
-    except Exception as e:
-        logger.error(f"Error finalizing session for candidate {state.candidate_id}: {str(e)}", exc_info=True)
-        return state
+    except Exception:
+        return state

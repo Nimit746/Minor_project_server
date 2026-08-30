@@ -16,7 +16,7 @@ def get_async_client() -> AsyncIOMotorClient:
     """Get or create singleton AsyncIOMotorClient."""
     global _async_client
     if _async_client is None:
-        uri = settings.mongo_uri or "mongodb://localhost:27017"
+        uri = settings.mongo_uri
         logger.info(f"Connecting AsyncIOMotorClient to {uri}")
         _async_client = AsyncIOMotorClient(uri)
     return _async_client
@@ -32,7 +32,7 @@ def get_sync_client() -> MongoClient:
     """Get or create singleton sync MongoClient."""
     global _sync_client
     if _sync_client is None:
-        uri = settings.mongo_uri or "mongodb://localhost:27017"
+        uri = settings.mongo_uri
         _sync_client = MongoClient(uri)
     return _sync_client
 
@@ -45,4 +45,4 @@ def get_db() -> AsyncIOMotorDatabase:
 def get_sync_db() -> Database:
     """Get synchronous MongoDB database instance."""
     client = get_sync_client()
-    return client[settings.mongo_db_name]
+    return client[settings.mongo_db_name]
