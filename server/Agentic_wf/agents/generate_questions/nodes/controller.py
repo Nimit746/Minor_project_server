@@ -1,4 +1,4 @@
-from Agentic_wf.agents.generate_questions.states.schemas import SessionState
+from Agentic_wf.agents.generate_questions.states import SessionState
 
 # List of default topics for fallback rotation
 DEFAULT_TOPICS = [
@@ -90,6 +90,9 @@ async def controller(state: SessionState) -> SessionState:
         if state.question and state.question.topic not in state.concept_gaps:
             state.concept_gaps.append(state.question.topic)
 
+    # Track difficulty progression for analytics
+    state.difficulty_history.append(state.current_difficulty)
+    
     # Pick the next topic
     state.current_topic = pick_next_topic(state)
     return state

@@ -2,8 +2,8 @@ from typing import Any, Dict, List
 from Agentic_wf.agents.roadmap.states import Roadmap
 from Agentic_wf.config import LLM
 from Agentic_wf.agents.roadmap.prompts import (
-    TOPIC_ANALYSIS_SYSTEM_PROMPT,
-    build_topic_analysis_prompt,
+    topic_analysis,
+    topic_analysis_prompt,
 )
 from Agentic_wf.agents.roadmap.utils import parse_json_safely
 
@@ -22,7 +22,7 @@ async def analyze_topics(state: Roadmap) -> Dict[str, Any]:
     performance_data = state.performance_data or []
     is_universal = state.is_universal
 
-    user_prompt = build_topic_analysis_prompt(
+    prompt = topic_analysis_prompt(
         target_role=target_role,
         available_hours_per_day=available_hours,
         target_date=target_date,
@@ -32,10 +32,15 @@ async def analyze_topics(state: Roadmap) -> Dict[str, Any]:
         is_universal=is_universal,
     )
 
-    messages = [
-        {"role": "system", "content": TOPIC_ANALYSIS_SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
-    ]
+    messages = topic_analysis.format_messages(
+        target_role=target_role,
+        available_hours_per_day=available_hours,
+        target_date=target_date or 'Flexible',
+        is_universal=is_universal,
+        weak_topics=str(weak_topics),
+        strengths=str(strengths),
+        performance_data=str(performance_data)
+    )
 
     try:
         llm = LLM.get_llm("groq")

@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from Agentic_wf.agents.roadmap.states import Roadmap
-from Agentic_wf.tools.db_tools import fetch_candidate_profile
-from Agentic_wf.config.database import get_async_db
+from Agentic_wf.config import get_async_db
+from Agentic_wf.tools import fetch_candidate_profile
 
 
 async def get_candidate_data(state: Roadmap) -> Dict[str, Any]:

@@ -4,9 +4,10 @@ from typing import Dict, List
 from Agentic_wf.config import LLM
 from Agentic_wf.agents.generate_questions.states.schemas import Question
 from Agentic_wf.agents.generate_questions.prompts.question_generation import (
-    QUESTION_GENERATION_SYSTEM_PROMPT,
-    build_rag_prompt,
-    build_question_generation_prompt
+    question_generation,
+    rag_question_generation,
+    rag_question_generation_prompt,
+    question_generation_prompt
 )
 
 # In-memory cache for local dev - keyed by topic, difficulty, and company
@@ -26,46 +27,68 @@ async def generate_batch_questions(
     company_name: str | None = None,
     target_role: str | None = None,
     candidate_skills: list[str] | None = None,
-    batch_size: int = 5
+    batch_size: int = 5,
+    question_type: str = "mcq"
 ) -> List[Question]:
     """
     Generate multiple questions in a single LLM call to optimize token usage.
     Caches all generated questions for future use.
+    Now supports both MCQ and subjective (open-ended) questions.
     """
     llm = LLM.get_llm("groq")
 
-    # Modify system prompt to request a JSON array of questions
-    batch_system_prompt = QUESTION_GENERATION_SYSTEM_PROMPT.replace(
+    # Get the base system prompt and modify it to request a JSON array of questions
+    base_messages = question_generation.format_messages(
+        context="",
+        difficulty="",
+        question_type="",
+        topic=""
+    )
+    base_system_prompt = base_messages[0].content
+    batch_system_prompt = base_system_prompt.replace(
         "You must return ONLY a valid JSON object",
         f"You must return ONLY a valid JSON array of {batch_size} JSON objects"
     )
 
-    # Build user prompt
+    # Build context strings
+    context_lines = []
+    if company_name:
+        context_lines.append(f"Target Company: {company_name}")
+    if target_role:
+        context_lines.append(f"Target Role: {target_role}")
+    if candidate_skills:
+        context_lines.append(f"Candidate Skills Background: {', '.join(candidate_skills[:6])}")
+    context_str = "\n".join(context_lines)
+
+    # Build chunks text if needed
+    chunks_text = ""
     if retrieved_chunks:
-        user_prompt = build_rag_prompt(
-            topic,
-            difficulty,
-            retrieved_chunks,
-            company_name=company_name,
-            target_role=target_role,
-            candidate_skills=candidate_skills
+        chunks_text = "\n\n---\n\n".join(retrieved_chunks)
+
+    # Add instruction to generate multiple unique questions of the specified type
+    additional_instruction = f"\n\nGenerate exactly {batch_size} unique, distinct {question_type} questions. For open-ended questions, provide a detailed rubric for evaluation. Return them as a JSON array."
+
+    # Create messages
+    if retrieved_chunks:
+        messages = rag_question_generation.format_messages(
+            context=context_str,
+            reference_material=chunks_text,
+            difficulty=difficulty,
+            question_type=question_type,
+            topic=topic
         )
     else:
-        user_prompt = build_question_generation_prompt(
-            topic,
-            difficulty,
-            company_name=company_name,
-            target_role=target_role,
-            candidate_skills=candidate_skills
+        messages = question_generation.format_messages(
+            context=context_str,
+            difficulty=difficulty,
+            question_type=question_type,
+            topic=topic
         )
-
-    # Add instruction to generate multiple unique questions
-    user_prompt += f"\n\nGenerate exactly {batch_size} unique, distinct questions. Return them as a JSON array."
-
-    messages = [
-        {"role": "system", "content": batch_system_prompt},
-        {"role": "user", "content": user_prompt}
-    ]
+    
+    # Update the system message to use the batch version
+    messages[0].content = batch_system_prompt
+    # Add the additional instruction to the user message
+    messages[1].content += additional_instruction
 
     # Call LLM with retry logic
     max_retries = 2
@@ -111,13 +134,16 @@ async def get_next_question_from_cache_or_generate(
     retrieved_chunks: list[str] = None,
     company_name: str | None = None,
     target_role: str | None = None,
-    candidate_skills: list[str] | None = None
+    candidate_skills: list[str] | None = None,
+    question_type: str = "mcq"
 ) -> Question | None:
     """
-    Check cache for (topic, difficulty, company).
+    Check cache for (topic, difficulty, company, question_type).
     If hit, pop and return one. If miss, generate a batch, cache them, return one.
+    Now supports both MCQ and subjective (open-ended) questions with proper caching.
     """
-    cache_key = get_cache_key(topic, difficulty, company_name)
+    # Update cache key to include question_type since we now generate different types
+    cache_key = f"{get_cache_key(topic, difficulty, company_name)}:{question_type}"
 
     # Check if we have questions in cache
     if cache_key in question_cache and question_cache[cache_key]:
@@ -130,7 +156,8 @@ async def get_next_question_from_cache_or_generate(
         retrieved_chunks,
         company_name=company_name,
         target_role=target_role,
-        candidate_skills=candidate_skills
+        candidate_skills=candidate_skills,
+        question_type=question_type
     )
 
     if new_questions:

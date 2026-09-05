@@ -1,6 +1,7 @@
-import json
+from langchain_core.prompts import ChatPromptTemplate
 
-TOPIC_ANALYSIS_SYSTEM_PROMPT = """You are an expert Technical Curriculum Architect and Career Mentor.
+topic_analysis = ChatPromptTemplate([
+    ('system',"""You are an expert Technical Curriculum Architect and Career Mentor.
 Your task is to analyze the candidate's target role, target domain, background performance, and pain points/weak topics, or create a universal curriculum if candidate data is absent.
 
 Guidelines:
@@ -9,28 +10,30 @@ Guidelines:
 3. Organize prioritized topics logically with category, priority (High/Medium/Low), estimated hours, and reasoning.
 
 Return ONLY a valid JSON object with the following schema:
-{
+{{
   "is_universal": boolean,
-  "learning_profile": {
+  "learning_profile": {{
     "summary": "Brief summary of candidate profile or universal domain path",
     "focus_areas": ["List of primary focus areas"],
     "total_estimated_weeks": number,
     "strategy": "Remediation-first OR Standard Mastery"
-  },
+  }},
   "prioritized_topics": [
-    {
+    {{
       "topic_name": "Name of topic",
       "priority": "High" | "Medium" | "Low",
       "is_weak_point": boolean,
       "estimated_hours": number,
       "learning_goal": "What the learner should achieve",
       "key_concepts": ["concept 1", "concept 2"]
-    }
+    }}
   ]
-}
-"""
+}}"""),
+    ('human', 'Target Role / Domain: {target_role}\nDaily Available Hours: {available_hours_per_day} hours/day\nTarget Completion Date: {target_date}\nUniversal Mode: {is_universal}\nIdentified Weak Topics / Pain Points: {weak_topics}\nIdentified Strengths: {strengths}\nCandidate Session/Performance History: {performance_data}\n\nAnalyze the requirements and generate the structured prioritized topics and learning profile in JSON.')
+])
 
-def build_topic_analysis_prompt(
+
+def topic_analysis_prompt(
     target_role: str,
     available_hours_per_day: float,
     target_date: str | None,
@@ -38,13 +41,13 @@ def build_topic_analysis_prompt(
     strengths: list[str],
     performance_data: list[dict],
     is_universal: bool
-) -> str:
-    return f"""Target Role / Domain: {target_role}
-Daily Available Hours: {available_hours_per_day} hours/day
-Target Completion Date: {target_date or 'Flexible'}
-Universal Mode: {is_universal}
-Identified Weak Topics / Pain Points: {json.dumps(weak_topics)}
-Identified Strengths: {json.dumps(strengths)}
-Candidate Session/Performance History: {json.dumps(performance_data)}
-
-Analyze the requirements and generate the structured prioritized topics and learning profile in JSON."""
+):
+    return topic_analysis.format(
+        target_role=target_role,
+        available_hours_per_day=available_hours_per_day,
+        target_date=target_date or 'Flexible',
+        is_universal=is_universal,
+        weak_topics=str(weak_topics),
+        strengths=str(strengths),
+        performance_data=str(performance_data)
+    )

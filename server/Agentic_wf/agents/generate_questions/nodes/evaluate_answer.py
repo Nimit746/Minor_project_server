@@ -1,7 +1,6 @@
 from Agentic_wf.agents.generate_questions.states.schemas import SessionState
 from Agentic_wf.agents.generate_questions.nodes.llm_judge import groq_judge, run_sandbox_tests
 
-
 async def evaluate_answer(state: SessionState) -> SessionState:
     """
     Evaluate the candidate's answer - Stage 6 implements type-based routing:
@@ -36,8 +35,21 @@ async def evaluate_answer(state: SessionState) -> SessionState:
     # Update running score
     if is_correct:
         state.score_running += 1
+        print(f"Answer marked as correct! Running score: {state.score_running}/{state.questions_asked}")
+    else:
+        print(f"Answer marked as incorrect. Running score: {state.score_running}/{state.questions_asked}")
         
-    # Update correctness history
-    state.answer_correctness_history.append(is_correct)
+    # Update correctness history - ensure histories stay in sync
+    if len(state.answer_correctness_history) < len(state.question_history):
+        state.answer_correctness_history.append(is_correct)
+    else:
+        # If we're processing a new question, replace any stale entry or append
+        if len(state.answer_correctness_history) == len(state.question_history):
+            # We're on a new question, append (question_history will be updated next cycle)
+            state.answer_correctness_history.append(is_correct)
+        else:
+            # Overwrite the last entry if it's out of sync (shouldn't happen, but safe)
+            state.answer_correctness_history[-1] = is_correct
     
+    print(f"Answer correctness history length: {len(state.answer_correctness_history)}, question history length: {len(state.question_history)}")
     return state
