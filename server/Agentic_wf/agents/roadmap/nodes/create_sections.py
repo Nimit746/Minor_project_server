@@ -2,8 +2,8 @@ from typing import Any, Dict
 from Agentic_wf.agents.roadmap.states import Roadmap
 from Agentic_wf.config import LLM
 from Agentic_wf.agents.roadmap.prompts import (
-    SECTION_CREATION_SYSTEM_PROMPT,
-    build_section_creation_prompt,
+    section_creation,
+    section_creation_prompt,
 )
 from Agentic_wf.agents.roadmap.utils import parse_json_safely
 
@@ -19,17 +19,19 @@ async def create_sections(state: Roadmap) -> Dict[str, Any]:
     prioritized_topics = state.prioritized_topics or []
     available_hours = state.available_hours_per_day or 2.0
 
-    user_prompt = build_section_creation_prompt(
+    prompt = section_creation_prompt(
         target_role=target_role,
         learning_profile=learning_profile,
         prioritized_topics=prioritized_topics,
         available_hours_per_day=available_hours,
     )
 
-    messages = [
-        {"role": "system", "content": SECTION_CREATION_SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt},
-    ]
+    messages = section_creation.format_messages(
+        target_role=target_role,
+        available_hours_per_day=available_hours,
+        learning_profile=str(learning_profile),
+        prioritized_topics=str(prioritized_topics)
+    )
 
     try:
         llm = LLM.get_llm("groq")

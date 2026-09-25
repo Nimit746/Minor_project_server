@@ -1,6 +1,8 @@
-from Agentic_wf.agents.generate_questions.prompts.question_generation import build_question_generation_prompt, build_rag_prompt
+from Agentic_wf.agents.generate_questions.prompts.question_generation import question_generation_prompt, rag_question_generation_prompt, question_generation, rag_question_generation
 
 __all__ = [
-    'build_question_generation_prompt',
-    'build_rag_prompt',
+    'question_generation_prompt',
+    'rag_question_generation_prompt',
+    'question_generation',
+    'rag_question_generation',
 ]

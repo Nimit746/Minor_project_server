@@ -1,8 +1,11 @@
-QUESTION_GENERATION_SYSTEM_PROMPT = """You are an expert technical interview question generator.
+from langchain_core.prompts import ChatPromptTemplate
+
+question_generation = ChatPromptTemplate([
+    ('system',"""You are an expert technical interview question generator.
 Create a high-quality interview question tailored to the target company, candidate background, topic, and difficulty.
 
 You must return ONLY a valid JSON object, no markdown fences, no preamble, no extra text. The JSON must match this schema exactly:
-{
+{{
   "id": "unique_string_id",
   "topic": "the provided topic",
   "difficulty": "easy|medium|hard",
@@ -11,19 +14,41 @@ You must return ONLY a valid JSON object, no markdown fences, no preamble, no ex
   "options": ["option A", "option B", "option C", "option D"],
   "correct_answer": "the correct option text",
   "rubric": "evaluation rubric for open-ended/coding questions"
-}
+}}
 
-Ensure the question is relevant, tests understanding of the topic, and is appropriate for the specified difficulty level and company interview standard."""
+Ensure the question is relevant, tests understanding of the topic, and is appropriate for the specified difficulty level and company interview standard."""),
+    ('human', 'Context:\n{context}\n\nGenerate a {difficulty} {question_type} question about: {topic}')
+])
+
+rag_question_generation = ChatPromptTemplate([
+    ('system',"""You are an expert technical interview question generator.
+Create a high-quality interview question tailored to the target company, candidate background, topic, and difficulty.
+
+You must return ONLY a valid JSON object, no markdown fences, no preamble, no extra text. The JSON must match this schema exactly:
+{{
+  "id": "unique_string_id",
+  "topic": "the provided topic",
+  "difficulty": "easy|medium|hard",
+  "question_type": "mcq|coding|open_ended",
+  "question_text": "the full question text",
+  "options": ["option A", "option B", "option C", "option D"],
+  "correct_answer": "the correct option text",
+  "rubric": "evaluation rubric for open-ended/coding questions"
+}}
+
+Ensure the question is relevant, tests understanding of the topic, and is appropriate for the specified difficulty level and company interview standard."""),
+    ('human', 'Context:\n{context}\n\nBase this question on the following reference material:\n{reference_material}\n\nGenerate a {difficulty} {question_type} question about: {topic}')
+])
 
 
-def build_question_generation_prompt(
+def question_generation_prompt(
     topic: str,
     difficulty: str,
     company_name: str | None = None,
     target_role: str | None = None,
     candidate_skills: list[str] | None = None,
     question_type: str = "mcq"
-) -> str:
+):
     """Build the user prompt for question generation incorporating company & candidate context."""
     context_lines = []
     if company_name:
@@ -34,13 +59,15 @@ def build_question_generation_prompt(
         context_lines.append(f"Candidate Skills Background: {', '.join(candidate_skills[:6])}")
 
     context_str = "\n".join(context_lines)
-    if context_str:
-        context_str = f"Context:\n{context_str}\n\n"
+    return question_generation.format(
+        context=context_str,
+        difficulty=difficulty,
+        question_type=question_type,
+        topic=topic
+    )
 
-    return f"""{context_str}Generate a {difficulty} {question_type} question about: {topic}"""
 
-
-def build_rag_prompt(
+def rag_question_generation_prompt(
     topic: str,
     difficulty: str,
     retrieved_chunks: list[str],
@@ -48,7 +75,7 @@ def build_rag_prompt(
     target_role: str | None = None,
     candidate_skills: list[str] | None = None,
     question_type: str = "mcq"
-) -> str:
+):
     """Build the user prompt with RAG grounding context, company and candidate context."""
     chunks_text = "\n\n---\n\n".join(retrieved_chunks)
     context_lines = []
@@ -60,9 +87,10 @@ def build_rag_prompt(
         context_lines.append(f"Candidate Skills Background: {', '.join(candidate_skills[:6])}")
 
     context_str = "\n".join(context_lines)
-    if context_str:
-        context_str = f"Context:\n{context_str}\n\n"
-
-    return f"""{context_str}Base this question on the following reference material:\n{chunks_text}
-
-Generate a {difficulty} {question_type} question about: {topic}"""
+    return rag_question_generation.format(
+        context=context_str,
+        reference_material=chunks_text,
+        difficulty=difficulty,
+        question_type=question_type,
+        topic=topic
+    )

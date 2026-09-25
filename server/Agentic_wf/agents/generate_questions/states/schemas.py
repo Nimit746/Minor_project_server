@@ -49,6 +49,10 @@ class SessionState(BaseModel):
     # Stage 8 fields (finalization)
     final_session_score: float | None = None
     updated_historical_avg: float | None = None
+    consolidated_metrics: dict | None = None  # Stores consolidated mock test results
+    
+    # Analytics fields
+    difficulty_history: list[int] = []  # Tracks progression of difficulty levels (1-5 scale)
 
 
 class CandidateProfile(BaseModel):

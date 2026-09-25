@@ -22,3 +22,4 @@ main.py
 /tests/*
 test_*.py
 graphs
+*.txt
