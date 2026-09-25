@@ -1,5 +1,5 @@
-from Agentic_wf.agents.generate_questions.states.schemas import SessionState
-from Agentic_wf.agents.generate_questions.nodes.llm_judge import groq_judge, run_sandbox_tests
+from Agentic_wf.agents.generate_questions.states import SessionState
+from Agentic_wf.agents.generate_questions.utils import groq_judge, run_sandbox_tests
 
 async def evaluate_answer(state: SessionState) -> SessionState:
     """
@@ -11,7 +11,7 @@ async def evaluate_answer(state: SessionState) -> SessionState:
     if not state.question or not state.candidate_answer:
         state.is_correct = False
         state.answer_correctness_history.append(False)
-        return state
+        return {"is_correct": False, "answer_correctness_history": state.answer_correctness_history}
     
     is_correct = False
     
@@ -39,17 +39,12 @@ async def evaluate_answer(state: SessionState) -> SessionState:
     else:
         print(f"Answer marked as incorrect. Running score: {state.score_running}/{state.questions_asked}")
         
-    # Update correctness history - ensure histories stay in sync
-    if len(state.answer_correctness_history) < len(state.question_history):
-        state.answer_correctness_history.append(is_correct)
-    else:
-        # If we're processing a new question, replace any stale entry or append
-        if len(state.answer_correctness_history) == len(state.question_history):
-            # We're on a new question, append (question_history will be updated next cycle)
-            state.answer_correctness_history.append(is_correct)
-        else:
-            # Overwrite the last entry if it's out of sync (shouldn't happen, but safe)
-            state.answer_correctness_history[-1] = is_correct
+    # Update correctness history - now that question_history is properly maintained, simple append
+    state.answer_correctness_history.append(is_correct)
     
     print(f"Answer correctness history length: {len(state.answer_correctness_history)}, question history length: {len(state.question_history)}")
-    return state
+    return {
+        "is_correct": is_correct,
+        "score_running": state.score_running,
+        "answer_correctness_history": state.answer_correctness_history,
+    }

@@ -3,5 +3,5 @@ from Agentic_wf.agents.generate_questions.tools.company_profiler import get_comp
 
 __all__ = [
     "analyze_resume",
-     "get_company_profile"
+    "get_company_profile"
 ]

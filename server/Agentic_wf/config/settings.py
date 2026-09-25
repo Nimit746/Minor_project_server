@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
 
     # Model Config
-    groq_default_model: str = "groq/compound-mini"
+    groq_default_model: str = "allam-2-7b"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     anthropic_model: str | None = None
     openai_model: str | None = None
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 200
 
 
-
+    tavily_api_key: str
 
 
     mongo_uri: str = "mongodb://localhost:27017"

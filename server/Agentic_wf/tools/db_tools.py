@@ -1,9 +1,11 @@
 from Agentic_wf.config.database import get_async_db
 from typing import Dict, Any, Optional
+from langchain_core.tools import tool
 
 
+@tool
 async def fetch_candidate_profile(candidate_id: str) -> Optional[Dict[str, Any]]:
-    """Fetch candidate profile from MongoDB."""
+    """Fetches a candidate's profile from the 'candidates' collection in MongoDB using their unique candidate_id. Returns the full profile document as a dictionary if found, otherwise returns None."""
     try:
         db = get_async_db()
         return await db.candidates.find_one({"candidate_id": candidate_id})
@@ -12,8 +14,9 @@ async def fetch_candidate_profile(candidate_id: str) -> Optional[Dict[str, Any]]
         return None
 
 
+@tool
 async def save_or_update_candidate_profile(candidate_id: str, data: Dict[str, Any]) -> bool:
-    """Save or update candidate profile in MongoDB."""
+    """Saves or updates a candidate's profile in the 'candidates' collection in MongoDB. It uses the candidate_id to find the document and updates it with the provided data. If no profile is found, a new one is created (upsert=True)."""
     try:
         db = get_async_db()
         await db.candidates.update_one(
@@ -27,8 +30,9 @@ async def save_or_update_candidate_profile(candidate_id: str, data: Dict[str, An
         return False
 
 
+@tool
 async def record_session_history(candidate_id: str, session_data: Dict[str, Any]) -> bool:
-    """Record a completed interview practice session in MongoDB."""
+    """Records a completed interview practice session in the 'sessions' collection in MongoDB. This is used to log the details of each session for historical analysis."""
     try:
         db = get_async_db()
         await db.sessions.insert_one({
@@ -38,4 +42,4 @@ async def record_session_history(candidate_id: str, session_data: Dict[str, Any]
         return True
     except Exception as e:
         print(f'Error in record_session_history: {e}')
-        return False    
+        return False

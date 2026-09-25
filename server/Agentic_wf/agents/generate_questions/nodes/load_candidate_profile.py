@@ -1,7 +1,10 @@
-from Agentic_wf.agents.generate_questions.states.schemas import SessionState, CandidateProfile
+import json
+import logging
+from Agentic_wf.agents.generate_questions.states import SessionState, CandidateProfile
 from Agentic_wf.config.database import get_async_db
 from Agentic_wf.agents.generate_questions.tools import analyze_resume, get_company_profile
 
+logger = logging.getLogger(__name__)
 
 async def load_candidate_profile(state: SessionState) -> SessionState:
     """
@@ -47,23 +50,55 @@ async def load_candidate_profile(state: SessionState) -> SessionState:
         except Exception:
             pass
 
-    # 2. Extract resume information if available
-    if state.resume_text:
+    # 2. Extract resume information if a URL is provided
+    if state.resume_file_url:
         try:
-            resume_analysis = await analyze_resume(state.resume_text)
-            state.extracted_skills = resume_analysis.get("skills", [])
-            if resume_analysis.get("recommended_topics"):
-                state.strengths = list(set(state.strengths + resume_analysis.get("recommended_topics", [])))
-        except Exception:
-            pass
+            # The analyze_resume tool now takes a URL
+            resume_analysis = await analyze_resume(state.resume_file_url)
+            
+            if "error" in resume_analysis:
+                logger.error(f"Resume analysis failed: {resume_analysis['error']}")
+            else:
+                state.extracted_skills = resume_analysis.get("skills", [])
+                profile.skills = state.extracted_skills
+                
+                # Merge recommended topics into strengths
+                recommended_topics = resume_analysis.get("recommended_topics", [])
+                state.strengths = list(set(state.strengths + recommended_topics))
+                profile.strengths = state.strengths
+                
+                # Optionally, save the URL of the analyzed resume
+                profile.resume_text = state.resume_file_url 
+        except Exception as e:
+            logger.warning(f"An exception occurred during resume analysis: {e}")
 
-    # 3. Retrieve company profiling if target company is specified
+    # 3. Retrieve company interview trends and extract focus areas if target company is specified
     if state.company_name:
         try:
-            comp_profile = await get_company_profile(state.company_name, state.target_role or "Software Engineer")
-            state.company_focus = comp_profile.get("focus_areas", [])
-        except Exception:
-            pass
+            # Call the updated function that returns JSON string
+            comp_profile_json = await get_company_profile.ainvoke({
+                "company_name": state.company_name,
+                "target_role": state.target_role
+            })
+            comp_profile = json.loads(comp_profile_json)
+            
+            # Extract focus areas from search results
+            focus_areas = []
+            for result in comp_profile.get("results", []):
+                snippet = result.get("snippet", "").lower()
+                # Extract common technical focus areas from interview snippets
+                if "coding" in snippet: focus_areas.append("Coding fundamentals")
+                if "system design" in snippet: focus_areas.append("System Design")
+                if "algorithms" in snippet: focus_areas.append("Algorithms")
+                if "data structures" in snippet: focus_areas.append("Data Structures")
+                if "api" in snippet: focus_areas.append("API Development")
+                if "database" in snippet: focus_areas.append("Database Systems")
+            
+            # Remove duplicates and set company focus
+            state.company_focus = list(dict.fromkeys(focus_areas))  # preserve order, remove duplicates
+        except Exception as e:
+            logger.warning(f"Failed to retrieve company trends: {e}")
+            state.company_focus = []
 
     # 4. Set initial difficulty based on candidate's historical score
     if state.historical_avg_score > 0.8:
@@ -81,7 +116,20 @@ async def load_candidate_profile(state: SessionState) -> SessionState:
     elif state.extracted_skills:
         state.current_topic = state.extracted_skills[0]
     elif not state.current_topic:
-        from Agentic_wf.agents.generate_questions.nodes.controller import AVAILABLE_TOPICS
-        state.current_topic = AVAILABLE_TOPICS[0]
+            from Agentic_wf.agents.generate_questions.utils.get_available_topics_for_session import DEFAULT_TOPICS
+            state.current_topic = DEFAULT_TOPICS[0]
 
-    return state
+    return {
+        "historical_avg_score": state.historical_avg_score,
+        "weak_topics": state.weak_topics,
+        "strengths": state.strengths,
+        "weaknesses": state.weaknesses,
+        "sessions_completed": state.sessions_completed,
+        "resume_text": state.resume_text,
+        "company_name": state.company_name,
+        "target_role": state.target_role,
+        "extracted_skills": state.extracted_skills,
+        "company_focus": state.company_focus,
+        "current_difficulty": state.current_difficulty,
+        "current_topic": state.current_topic,
+    }

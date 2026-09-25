@@ -1,0 +1,39 @@
+[
+    {
+        "question_text": "What is the difference between Python lists and tuples?",
+        "question_type": "open",
+        "topic": "Python",
+        "difficulty": 1,
+        "correct_answer": "Lists are mutable while tuples are immutable.",
+        "options": null
+    },
+    {
+        "question_text": "Which of these is a Python web framework?",
+        "question_type": "mcq",
+        "topic": "Python",
+        "difficulty": 1,
+        "correct_answer": "FastAPI",
+        "options": [
+            "TensorFlow",
+            "FastAPI",
+            "PyTorch",
+            "OpenCV"
+        ]
+    },
+    {
+        "question_text": "Explain the concept of gradient descent in machine learning.",
+        "question_type": "open",
+        "topic": "Machine Learning",
+        "difficulty": 3,
+        "correct_answer": "Gradient descent is an optimization algorithm used to minimize a cost function by iteratively moving in the direction of the negative gradient.",
+        "options": null
+    },
+    {
+        "question_text": "What is the purpose of Docker containers?",
+        "question_type": "open",
+        "topic": "DevOps",
+        "difficulty": 2,
+        "correct_answer": "Docker containers package software with all its dependencies to ensure consistent deployment across environments.",
+        "options": null
+    }
+]

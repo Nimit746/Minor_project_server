@@ -20,6 +20,6 @@ uv.lock
 model.py
 main.py
 /tests/*
-test_*.py
+# test_*.py
 graphs
 *.txt

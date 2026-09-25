@@ -1,0 +1,11 @@
+{'candidate_id': 'test_candidate_001', 'name': 'John Doe', 'email': 'john.doe@example.com', 'phone': '+1-555-0100', 'location': 'San Francisco, CA', 'target_role': 'AI Engineer', 'target_company': 'Amazon', 'years_of_experience': 3, 'skills': ['Python', 'FastAPI', 'Machine Learning', 'Deep Learning', 'PostgreSQL', 'Docker'
+    ], 'education': [
+        {'degree': 'M.S. Computer Science', 'school': 'Stanford University', 'year': 2021
+        }
+    ], 'work_experience': [
+        {'company': 'Tech Corp', 'role': 'Software Engineer', 'duration': '2 years', 'description': 'Developed scalable backend services and ML pipelines'
+        }
+    ], 'weak_topics': ['Distributed Systems', 'Kubernetes'
+    ], 'strengths': ['Python', 'Machine Learning', 'FastAPI'
+    ]
+}

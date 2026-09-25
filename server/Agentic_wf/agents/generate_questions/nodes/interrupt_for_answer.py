@@ -5,7 +5,7 @@ from Agentic_wf.agents.generate_questions.states import SessionState
 async def interrupt_for_answer(state: SessionState) -> SessionState:
     """Interrupt the graph to wait for the candidate's answer."""
     if not state.question:
-        return state
+        return {}
         
     # Use LangGraph's interrupt to pause execution and wait for resume value
     candidate_answer = interrupt({
@@ -18,5 +18,10 @@ async def interrupt_for_answer(state: SessionState) -> SessionState:
     # Update state with the received answer
     state.candidate_answer = candidate_answer
     state.answer_history.append(candidate_answer)
+    state.question_history.append(state.question)
     
-    return state
+    return {
+        "candidate_answer": candidate_answer,
+        "answer_history": state.answer_history,
+        "question_history": state.question_history,
+    }

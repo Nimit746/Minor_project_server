@@ -2,7 +2,6 @@
 
 ```
 ├── docs
-│   └── personalised_interview_generation.drawio
 ├── server
 │   ├── Agentic_wf
 │   │   ├── agents
@@ -22,27 +21,49 @@
 │   │   │   ├── generate_questions
 │   │   │   │   ├── nodes
 │   │   │   │   │   ├── __init__.py
-│   │   │   │   │   ├── cache_lookup.py
 │   │   │   │   │   ├── controller.py
 │   │   │   │   │   ├── evaluate_answer.py
 │   │   │   │   │   ├── finalize_session.py
 │   │   │   │   │   ├── generate_question.py
 │   │   │   │   │   ├── interrupt_for_answer.py
-│   │   │   │   │   ├── llm_judge.py
 │   │   │   │   │   └── load_candidate_profile.py
 │   │   │   │   ├── prompts
 │   │   │   │   │   ├── __init__.py
-│   │   │   │   │   └── question_generation.py
+│   │   │   │   │   ├── question_generation_prompt.py
+│   │   │   │   │   ├── rag_question_generation_prompt.py
+│   │   │   │   │   └── resume_analyzer_prompt.py
 │   │   │   │   ├── states
 │   │   │   │   │   ├── __init__.py
-│   │   │   │   │   └── schemas.py
+│   │   │   │   │   ├── candidate_profile.py
+│   │   │   │   │   ├── question.py
+│   │   │   │   │   ├── resume_analysis.py
+│   │   │   │   │   └── session_state.py
 │   │   │   │   ├── tools
 │   │   │   │   │   ├── __init__.py
 │   │   │   │   │   ├── company_profiler.py
 │   │   │   │   │   └── resume_analyzer.py
 │   │   │   │   ├── utils
 │   │   │   │   │   ├── __init__.py
-│   │   │   │   │   └── router.py
+│   │   │   │   │   ├── bump_difficulty.py
+│   │   │   │   │   ├── cache_lookup.py
+│   │   │   │   │   ├── calculate_detailed_metrics.py
+│   │   │   │   │   ├── clean_llm_json_response.py
+│   │   │   │   │   ├── docx_extractor.py
+│   │   │   │   │   ├── file_downloader.py
+│   │   │   │   │   ├── generate_batch_questions.py
+│   │   │   │   │   ├── get_available_topics_for_session.py
+│   │   │   │   │   ├── get_cache_key.py
+│   │   │   │   │   ├── get_next_question_type.py
+│   │   │   │   │   ├── get_safe_batch_size.py
+│   │   │   │   │   ├── groq_judge.py
+│   │   │   │   │   ├── pdf_extractor.py
+│   │   │   │   │   ├── pick_next_topic.py
+│   │   │   │   │   ├── recompute_weak_topics.py
+│   │   │   │   │   ├── resume_text_extractor.py
+│   │   │   │   │   ├── retrieve_relevant_chunks.py
+│   │   │   │   │   ├── router.py
+│   │   │   │   │   ├── run_sandbox_tests.py
+│   │   │   │   │   └── skill_extraction.py
 │   │   │   │   ├── __init__.py
 │   │   │   │   └── graph_builder.py
 │   │   │   ├── research
@@ -76,15 +97,26 @@
 │   │   │   │   └── graph_builder.py
 │   │   │   ├── roadmap
 │   │   │   │   ├── nodes
-│   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── analyze_topics.py
+│   │   │   │   │   ├── compile_roadmap.py
+│   │   │   │   │   ├── create_sections.py
+│   │   │   │   │   ├── generate_sections.py
+│   │   │   │   │   └── get_candidate_data.py
 │   │   │   │   ├── prompts
-│   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   ├── section_creation.py
+│   │   │   │   │   ├── section_enrichment.py
+│   │   │   │   │   └── topic_analysis.py
 │   │   │   │   ├── states
-│   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── roadmap.py
 │   │   │   │   ├── tools
-│   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── roadmap_search.py
 │   │   │   │   ├── utils
-│   │   │   │   │   └── __init__.py
+│   │   │   │   │   ├── __init__.py
+│   │   │   │   │   └── json_parser.py
 │   │   │   │   ├── __init__.py
 │   │   │   │   └── graph_builder.py
 │   │   │   └── __init__.py
@@ -122,12 +154,14 @@
 │   │   │   └── llm_service.py
 │   │   ├── tools
 │   │   │   ├── __init__.py
-│   │   │   └── db_tools.py
+│   │   │   ├── db_tools.py
+│   │   │   └── web_search.py
 │   │   ├── utils
 │   │   │   └── __init__.py
 │   │   └── __init__.py
 │   ├── app
 │   │   ├── config
+│   │   │   └── __init__.py
 │   │   ├── core
 │   │   │   └── __init__.py
 │   │   ├── db
@@ -149,16 +183,59 @@
 │   │   ├── agents
 │   │   │   └── resume_parse
 │   │   │       └── test_download_node.py
+│   │   ├── e2e
+│   │   │   └── test_interview_session.py
+│   │   ├── fixtures
+│   │   │   ├── data
+│   │   │   │   ├── candidate.json
+│   │   │   │   ├── questions.json
+│   │   │   │   └── roadmap.json
+│   │   │   ├── responses
+│   │   │   │   └── llm_responses.json
+│   │   │   └── resumes
+│   │   ├── integration
+│   │   │   ├── agents
+│   │   │   │   └── test_generate_questions_workflow.py
+│   │   │   ├── cloud
+│   │   │   ├── database
+│   │   │   └── rag
+│   │   ├── unit
+│   │   │   ├── agents
+│   │   │   │   ├── evaluation
+│   │   │   │   ├── generate_questions
+│   │   │   │   │   ├── test_controller.py
+│   │   │   │   │   ├── test_evaluate_answer.py
+│   │   │   │   │   ├── test_finalize_session.py
+│   │   │   │   │   ├── test_generate_question.py
+│   │   │   │   │   ├── test_graph_builder.py
+│   │   │   │   │   ├── test_load_candidate_profile.py
+│   │   │   │   │   └── test_utils.py
+│   │   │   │   ├── research
+│   │   │   │   ├── resume_parse
+│   │   │   │   │   └── test_graph_builder.py
+│   │   │   │   ├── roadmap
+│   │   │   │   │   └── test_graph_builder.py
+│   │   │   │   └── __init__.py
+│   │   │   ├── config
+│   │   │   ├── core
+│   │   │   ├── services
+│   │   │   │   ├── cloud
+│   │   │   │   └── rag
+│   │   │   ├── tools
+│   │   │   └── utils
+│   │   ├── __init__.py
+│   │   ├── conftest.py
 │   │   ├── test_imports.py
 │   │   └── test_main.py
-│   ├── graph.png
-│   ├── main.py
-│   ├── model.py
 │   ├── pyproject.toml
-│   ├── requirements.txt
-│   └── test_agent.py
+│   ├── test_agent.py
+│   ├── test_question_generator_agent.py
+│   ├── test_resume_parse_agent.py
+│   ├── test_roadmap_agent.py
+│   └── test_roadmap_agent1.py
 └── README.md
 ```
+
 
 ## Advancements for this project
 
