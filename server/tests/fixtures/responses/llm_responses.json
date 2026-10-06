@@ -1,0 +1,51 @@
+{
+    "evaluate_answer_correct": {
+        "is_correct": true,
+        "feedback": "Good understanding of the concept.",
+        "score": 1.0
+    },
+    "evaluate_answer_incorrect": {
+        "is_correct": false,
+        "feedback": "The answer missed key points about the topic.",
+        "score": 0.0
+    },
+    "generate_question_open": {
+        "question_text": "Explain the concept of Python's GIL and its implications.",
+        "question_type": "open",
+        "topic": "Python",
+        "difficulty": 3
+    },
+    "generate_question_mcq": {
+        "question_text": "Which of these is not a Python framework?",
+        "question_type": "mcq",
+        "topic": "Python",
+        "options": [
+            "Django",
+            "Flask",
+            "FastAPI",
+            "React"
+        ],
+        "correct_answer": "React",
+        "topic": "Python",
+        "difficulty": 2
+    },
+    "extract_skills": [
+        "Python",
+        "Machine Learning",
+        "Deep Learning",
+        "FastAPI"
+    ],
+    "analyze_strengths_weaknesses": {
+        "strengths": [
+            "Python",
+            "Machine Learning"
+        ],
+        "weaknesses": [
+            "Distributed Systems",
+            "Kubernetes"
+        ],
+        "concept_gaps": [
+            "Advanced container orchestration"
+        ]
+    }
+}

@@ -5,7 +5,7 @@ from Agentic_wf.agents.generate_questions.utils import should_continue
 from Agentic_wf.agents.generate_questions.nodes import load_candidate_profile, generate_question, interrupt_for_answer, evaluate_answer, controller, finalize_session
 
 
-def build_question_generator_graph():
+def build_question_generator_graph(checkpointer=None):
     """Build the question generation workflow graph (Stage 8 complete implementation)."""
     # Initialize memory saver for checkpointing
     memory = MemorySaver()
@@ -44,5 +44,5 @@ def build_question_generator_graph():
     workflow.add_edge("finalize_session", END)
     
     # Compile the graph with checkpointer
-    app = workflow.compile(checkpointer=memory)
+    app = workflow.compile(checkpointer=checkpointer or memory)
     return app

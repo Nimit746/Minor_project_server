@@ -1,0 +1,20 @@
+{'target_role': 'AI Engineer', 'timeline': {'total_estimated_weeks': 24
+    }, 'sections': [
+        {'title': 'Python Fundamentals', 'duration_weeks': 4, 'topics': ['Advanced Python', 'Data Structures', 'Algorithms'
+            ], 'checkpoints': ['Project: Build a REST API', 'Quiz: Python internals'
+            ]
+        },
+        {'title': 'Machine Learning Basics', 'duration_weeks': 6, 'topics': ['Supervised Learning', 'Unsupervised Learning', 'Model Evaluation'
+            ], 'checkpoints': ['Kaggle competition submission', 'ML model deployment'
+            ]
+        },
+        {'title': 'Deep Learning', 'duration_weeks': 8, 'topics': ['Neural Networks', 'CNN', 'RNN', 'Transformers'
+            ], 'checkpoints': ['Image classification project', 'NLP sentiment analysis'
+            ]
+        },
+        {'title': 'MLOps & Deployment', 'duration_weeks': 6, 'topics': ['Docker', 'Kubernetes', 'CI/CD', 'Cloud Deployment'
+            ], 'checkpoints': ['Deploy model to AWS', 'Build CI/CD pipeline'
+            ]
+        }
+    ]
+}

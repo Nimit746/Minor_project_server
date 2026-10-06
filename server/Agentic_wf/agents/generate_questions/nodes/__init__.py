@@ -4,7 +4,6 @@ from Agentic_wf.agents.generate_questions.nodes.interrupt_for_answer import inte
 from Agentic_wf.agents.generate_questions.nodes.evaluate_answer import evaluate_answer
 from Agentic_wf.agents.generate_questions.nodes.controller import controller
 from Agentic_wf.agents.generate_questions.nodes.finalize_session import finalize_session
-from Agentic_wf.agents.generate_questions.nodes.cache_lookup import get_next_question_from_cache_or_generate, generate_batch_questions
 
 __all__ = [
     'load_candidate_profile',
@@ -13,6 +12,4 @@ __all__ = [
     'evaluate_answer',
     'controller',
     'finalize_session',
-    'get_next_question_from_cache_or_generate',
-    'generate_batch_questions',
-]
+]

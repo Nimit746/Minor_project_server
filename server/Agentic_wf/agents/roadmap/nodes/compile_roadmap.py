@@ -29,7 +29,7 @@ async def compile_roadmap(state: Roadmap) -> Dict[str, Any]:
         "candidate_id": candidate_id,
         "target_role": target_role,
         "is_universal": is_universal,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime._now().isoformat(),
         "timeline": {
             "available_hours_per_day": available_hours,
             "target_date": state.target_date,

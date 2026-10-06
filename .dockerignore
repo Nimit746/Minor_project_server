@@ -1,0 +1,67 @@
+
+# Python virtual environments
+.venv/
+**/.venv/
+venv/
+**/venv/
+env/
+ENV/
+
+# Python cache and compiled files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# Python testing and tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.tox/
+
+# Git
+.git/
+.gitignore
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# AI model caches
+.cache/
+.huggingface/
+models/
+*.safetensors
+*.gguf
+
+# Generated files
+logs/
+*.log
+output/
+outputs/
+uploads/
+temp/
+.tmp/
+
+# Testing and documentation
+tests/
+notebooks/
+docs/
+test_*.py
+
+# IDE
+.vscode/
+.idea/
+
+# Frontend dependencies
+node_modules/
+.next/
+dist/
+
+# Local development files
+hello.txt
+graphs/
+docs/
+README.md

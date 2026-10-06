@@ -1,0 +1,107 @@
+# services:
+#   app:
+#     build: ./server
+#     ports:
+#       - "8000:8000"
+#     container_name: backend_server
+#     env_file:
+#       - ./server/.env
+#     depends_on:
+#       - mongodb
+#       - redis
+#       - qdrant
+#     restart: unless-stopped
+
+
+
+#   mongodb:
+#     image: mongo:6-jammy
+#     container_name: mongodb_database
+#     volumes:
+#       - mongodb_data:/data/db
+#     ports:
+#       - "27017:27017"
+#     restart: unless-stopped
+
+
+#   redis:
+#     image: redis:7-alpine
+#     container_name: redis
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis_data:/data
+#     restart: unless-stopped
+
+
+
+#   qdrant:
+#     image: qdrant/qdrant:latest
+#     container_name: qdrant
+#     ports:
+#       - "6333:6333"
+#       - "6334:6334"
+#     volumes:
+#       - qdrant_data:/qdrant/storage
+#     restart: unless-stopped
+
+
+# volumes:
+#   mongodb_data:
+#   redis_data:
+#   qdrant_data:
+
+
+
+services:
+  app:
+    build: ./server
+    container_name: backend_server
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./server/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6-jammy
+    container_name: mongodb_database
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  redis_data:
+  qdrant_data:
