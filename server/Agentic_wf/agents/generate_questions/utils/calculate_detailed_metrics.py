@@ -73,7 +73,7 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
             "total_correct": state.score_running,
             "overall_score": overall_score,
             "passed": passed,
-            "completion_timestamp": datetime.utcnow().isoformat()
+            "completion_timestamp": datetime._now().isoformat()
         },
         "type_wise": {
             "mcq": {

@@ -25,7 +25,8 @@ async def evaluate_answer(state: SessionState) -> SessionState:
     elif state.question.question_type == "open_ended":
         # Use LLM judge only for open-ended questions (only LLM call in eval path)
         if state.question.rubric:
-            is_correct = await groq_judge(state.candidate_answer, state.question.rubric)
+            judge_result = await groq_judge(state.candidate_answer, state.question.rubric)
+            is_correct = judge_result.score >= 5
         else:
             is_correct = False
     

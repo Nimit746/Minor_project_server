@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
 
     # Model Config
-    groq_default_model: str = "allam-2-7b"
+    groq_default_model: str = "openai/gpt-oss-20b"
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     anthropic_model: str | None = None
     openai_model: str | None = None

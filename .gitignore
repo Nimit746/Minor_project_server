@@ -18,7 +18,6 @@ uv.lock
 *.drawio
 .env
 model.py
-main.py
 /tests/*
 # test_*.py
 graphs

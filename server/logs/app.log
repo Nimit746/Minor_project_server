@@ -1,0 +1,34 @@
+2026-10-03 01:41:05,787 | INFO     | main:47 | Application root endpoint accessed
+2026-10-03 01:41:15,076 | INFO     | main:47 | Application root endpoint accessed
+2026-10-03 01:42:17,323 | INFO     | main:47 | Application root endpoint accessed
+2026-10-03 01:45:04,106 | INFO     | main:47 | Application root endpoint accessed
+2026-10-03 01:45:13,925 | WARNING  | main:57 | Hello
+2026-10-03 01:45:39,061 | WARNING  | main:57 | Hello
+2026-10-03 01:45:47,507 | ERROR    | main:57 | Hello
+2026-10-03 01:45:47,943 | ERROR    | main:57 | Hello
+2026-10-03 01:45:48,321 | ERROR    | main:57 | Hello
+2026-10-03 01:45:48,516 | ERROR    | main:57 | Hello
+2026-10-03 01:45:48,679 | ERROR    | main:57 | Hello
+2026-10-03 01:45:48,853 | ERROR    | main:57 | Hello
+2026-10-03 01:45:49,018 | ERROR    | main:57 | Hello
+2026-10-03 01:45:49,178 | ERROR    | main:57 | Hello
+2026-10-03 01:46:08,443 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:08,614 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:08,776 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:08,954 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:09,126 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:09,300 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:09,475 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:09,652 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:09,823 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:09,987 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:10,165 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:10,337 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:10,515 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:10,712 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:10,878 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:11,057 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:11,244 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:11,406 | DEBUG    | main:57 | Hello
+2026-10-03 01:46:11,575 | DEBUG    | main:57 | Hello
+2026-10-03 01:47:04,105 | INFO     | main:57 | Hello

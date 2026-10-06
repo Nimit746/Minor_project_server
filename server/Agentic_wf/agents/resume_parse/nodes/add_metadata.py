@@ -22,7 +22,7 @@ async def add_metadata(state: FileState) -> FileState:
         
         # Get base metadata from state
         base_metadata = {
-            "processing_timestamp": datetime.utcnow().isoformat(),
+            "processing_timestamp": datetime._now().isoformat(),
             "pipeline_version": "1.0",  # Update as you iterate on your pipeline
             "workflow_type": "resume_parsing",
             "environment": "production"  # You could pull this from config
