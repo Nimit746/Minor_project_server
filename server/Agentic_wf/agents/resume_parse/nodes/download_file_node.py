@@ -23,6 +23,22 @@ async def download_file(state: FileState) -> FileState:
     print(f"📋 Document ID: {state['document_id']}")
 
     try:
+        # Check if file is already on local storage (e.g. from direct upload)
+        local_path = state.get('metadata', {}).get('local_temp_path')
+        if local_path and os.path.exists(local_path):
+            file_size = os.path.getsize(local_path)
+            print(f"📄 Local file found directly at: {local_path} ({file_size} bytes)")
+            return {
+                "status": "file_downloaded",
+                "metadata": {
+                    **state.get('metadata', {}),
+                    "local_temp_path": local_path,
+                    "temp_directory": None,
+                    "file_size_bytes": file_size
+                },
+                "error": None
+            }
+
         cloud_service = CloudinaryService()
         filename = state['filename']
         document_id = state['document_id']
@@ -39,7 +55,8 @@ async def download_file(state: FileState) -> FileState:
         print(f"📄 Local file path will be: {local_file_path}")
 
         print(f"⬇️ Attempting Cloudinary download...")
-        cloud_service.download_file(cloud_path, local_file_path)
+        file_url = state.get('file_url') if state.get('file_url', '').startswith('http') else None
+        cloud_service.download_file(cloud_path, local_file_path, direct_url=file_url)
         print(f"✅ Cloudinary download completed")
 
         if not os.path.exists(local_file_path):

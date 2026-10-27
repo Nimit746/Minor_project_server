@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from Agentic_wf.agents.roadmap.states import Roadmap
 from Agentic_wf.config.database import get_async_db
 
@@ -29,7 +29,7 @@ async def compile_roadmap(state: Roadmap) -> Dict[str, Any]:
         "candidate_id": candidate_id,
         "target_role": target_role,
         "is_universal": is_universal,
-        "created_at": datetime._now().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "timeline": {
             "available_hours_per_day": available_hours,
             "target_date": state.target_date,

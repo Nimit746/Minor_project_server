@@ -11,6 +11,7 @@ async def load_candidate_profile(state: SessionState) -> SessionState:
     Load candidate profile from MongoDB and analyze resume/company context
     to personalize the starting state and topic list.
     """
+    profile = None
     # 1. Load or fallback profile from MongoDB
     if state.candidate_id:
         try:
@@ -47,28 +48,28 @@ async def load_candidate_profile(state: SessionState) -> SessionState:
                 if not state.target_role and profile.target_role:
                     state.target_role = profile.target_role
 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not load candidate profile from DB: {e}")
 
     # 2. Extract resume information if a URL is provided
     if state.resume_file_url:
         try:
-            # The analyze_resume tool now takes a URL
-            resume_analysis = await analyze_resume(state.resume_file_url)
+            # The analyze_resume tool is a LangChain StructuredTool, invoke via ainvoke
+            resume_analysis = await analyze_resume.ainvoke({"file_url": state.resume_file_url})
             
             if "error" in resume_analysis:
                 logger.error(f"Resume analysis failed: {resume_analysis['error']}")
             else:
                 state.extracted_skills = resume_analysis.get("skills", [])
-                profile.skills = state.extracted_skills
+                if profile:
+                    profile.skills = state.extracted_skills
                 
                 # Merge recommended topics into strengths
                 recommended_topics = resume_analysis.get("recommended_topics", [])
                 state.strengths = list(set(state.strengths + recommended_topics))
-                profile.strengths = state.strengths
-                
-                # Optionally, save the URL of the analyzed resume
-                profile.resume_text = state.resume_file_url 
+                if profile:
+                    profile.strengths = state.strengths
+                    profile.resume_text = state.resume_file_url 
         except Exception as e:
             logger.warning(f"An exception occurred during resume analysis: {e}")
 

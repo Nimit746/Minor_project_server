@@ -37,13 +37,22 @@ class InterviewService:
     # ------------------------------------------------------------------ ADAPTERS
     @staticmethod
     def _initial_state(user: UserModel, session: InterviewSessionModel, resume: ResumeModel) -> dict:
+        diff_map = {"beginner": 1, "easy": 2, "medium": 3, "hard": 4, "expert": 5}
+        difficulty_num = (
+            diff_map.get(str(session.difficulty).lower(), 2)
+            if isinstance(session.difficulty, str)
+            else (session.difficulty or 2)
+        )
+
         return {
-            "session_id": session.uuid,
+            "candidate_id": user.uuid,
             "user_id": user.uuid,
+            "session_id": session.uuid,
             "resume_id": resume.uuid,
-            "role": session.role,
-            "company": session.target_company,
-            "difficulty": session.difficulty,
+            "resume_file_url": resume.file_path,
+            "company_name": session.target_company or "Tech Company",
+            "target_role": session.role or "Software Engineer",
+            "current_difficulty": difficulty_num,
         }
 
     @staticmethod
@@ -64,13 +73,29 @@ class InterviewService:
             value = {"prompt": value}
         if not isinstance(value, dict):
             value = {"prompt": str(value)}
-        prompt = value.get("prompt") or value.get("question") or value.get("text") or ""
-        known = {"prompt", "question", "text", "topic", "qtype", "type", "question_type",
-                 "difficulty", "options"}
+        prompt = (
+            value.get("question_text")
+            or value.get("prompt")
+            or value.get("question")
+            or value.get("text")
+            or ""
+        )
+        raw_qtype = str(value.get("qtype") or value.get("type") or value.get("question_type") or "theory").lower()
+        if raw_qtype in ("open_ended", "subjective", "conceptual", "theoretical"):
+            normalized_qtype = "theory"
+        elif "code" in raw_qtype or "coding" in raw_qtype:
+            normalized_qtype = "coding"
+        elif "mcq" in raw_qtype or "multiple_choice" in raw_qtype:
+            normalized_qtype = "mcq"
+        else:
+            normalized_qtype = "theory"
+
+        known = {"prompt", "question", "question_text", "text", "topic", "qtype", "type", "question_type",
+                 "difficulty", "options", "question_id", "id", "rubric"}
         return {
             "prompt": str(prompt),
             "topic": str(value.get("topic") or "general"),
-            "qtype": str(value.get("qtype") or value.get("type") or value.get("question_type") or "theory"),
+            "qtype": normalized_qtype,
             "difficulty": str(value.get("difficulty") or "medium"),
             "options": [str(o) for o in value["options"]] if isinstance(value.get("options"), list) else None,
             "meta": {k: v for k, v in value.items() if k not in known} or None,
@@ -149,6 +174,12 @@ class InterviewService:
         if resume.status != "ready":
             raise ConflictException(f"Resume is not ready yet (status: {resume.status})")
 
+        # Automatically auto-abandon any previous active session with 0 turns (crashed before 1st question)
+        await self.col.update_many(
+            {"user_uuid": user.uuid, "status": "active", "turns": {"$size": 0}},
+            {"$set": {"status": "abandoned", "updated_at": _now()}},
+        )
+
         active = await self.sessions.count({"user_uuid": user.uuid, "status": "active"})
         if active >= get_settings().MAX_ACTIVE_SESSIONS:
             raise ConflictException("Too many active interviews; finish or abandon one first")
@@ -164,11 +195,11 @@ class InterviewService:
         )
         try:
             out = await self.graph.ainvoke(self._initial_state(user, session, resume), self._cfg(session.uuid))
+            return await self._apply_output(session.uuid, out)
         except Exception:
             logger.exception("Graph failed while starting session %s", session.uuid)
             await self._mark_failed(session.uuid)
             raise AppException("Interview engine failed to start", 502)
-        return await self._apply_output(session.uuid, out)
 
     async def answer(self, user: UserModel, session_uuid: str, seq: int, text: str) -> InterviewTurnResponse:
         now = _now()

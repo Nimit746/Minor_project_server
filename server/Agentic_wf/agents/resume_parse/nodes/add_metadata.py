@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from Agentic_wf.agents.resume_parse.states import FileState
 
 
@@ -22,7 +22,7 @@ async def add_metadata(state: FileState) -> FileState:
         
         # Get base metadata from state
         base_metadata = {
-            "processing_timestamp": datetime._now().isoformat(),
+            "processing_timestamp": datetime.now(timezone.utc).isoformat(),
             "pipeline_version": "1.0",  # Update as you iterate on your pipeline
             "workflow_type": "resume_parsing",
             "environment": "production"  # You could pull this from config

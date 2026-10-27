@@ -61,10 +61,31 @@ services:
       - "8000:8000"
     env_file:
       - ./server/.env
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       redis:
         condition: service_healthy
       qdrant:
+        condition: service_started
+      mongodb:
+        condition: service_started
+    restart: unless-stopped
+
+  worker:
+    build: ./server
+    container_name: backend_worker
+    command: ["uv", "run", "arq", "app.tasks.worker.WorkerSettings"]
+    env_file:
+      - ./server/.env
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      mongodb:
         condition: service_started
     restart: unless-stopped
 
@@ -105,3 +126,4 @@ volumes:
   mongodb_data:
   redis_data:
   qdrant_data:
+  uploads_data:

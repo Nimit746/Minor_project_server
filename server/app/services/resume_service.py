@@ -60,10 +60,27 @@ class ResumeService:
             size_bytes=len(content),
             file_path="",
         )
-        # stored name is our uuid, never the client's filename
-        path = Path(s.UPLOAD_DIR) / user.uuid / f"{resume.uuid}{ext}"
-        resume.file_path = str(path)
-        await asyncio.to_thread(_write_file, path, content)
+
+        # Upload directly to Cloudinary (cloud storage)
+        try:
+            from io import BytesIO
+            from Agentic_wf.services.cloud import get_cloud_service
+
+            cloud_service = get_cloud_service()
+            destination_path = f"resumes/{resume.uuid}"
+            upload_res = await asyncio.to_thread(
+                cloud_service.upload_file_object,
+                BytesIO(content),
+                destination_path,
+            )
+            resume.file_path = upload_res.get("url") or destination_path
+        except Exception:
+            logger.exception("Cloud upload failed for resume %s", resume.uuid)
+            # Fallback to local disk if cloud fails
+            path = Path(s.UPLOAD_DIR) / user.uuid / f"{resume.uuid}{ext}"
+            resume.file_path = str(path)
+            await asyncio.to_thread(_write_file, path, content)
+
         await self.repo.create(resume)
 
         try:

@@ -1,79 +1,100 @@
+
 from Agentic_wf.agents.generate_questions.states import SessionState
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 def calculate_detailed_metrics(state: SessionState) -> dict:
     """
-    Calculate detailed metrics for consolidated mock test results.
-    Includes breakdown by question type, difficulty level, and topic performance.
+    Calculate consolidated mock interview metrics, including:
+    - Overall performance
+    - Question-type performance
+    - Difficulty-wise performance
+    - Topic-wise performance
     """
-    # Calculate type-wise performance
-    mcq_questions = [q for q in state.question_history if q.question_type == "mcq"]
-    open_ended_questions = [q for q in state.question_history if q.question_type == "open_ended"]
-    
-    # Calculate correct answers with proper boundary checks to avoid index errors
+
+    questions = state.question_history
+    answers = state.answer_correctness_history
+
+    mcq_questions = [
+        q for q in questions if q.question_type == "mcq"
+    ]
+    open_ended_questions = [
+        q for q in questions if q.question_type == "open_ended"
+    ]
+
+    # Pair each question with its corresponding correctness result.
+    paired_count = min(len(questions), len(answers))
+    paired_results = zip(
+        questions[:paired_count],
+        answers[:paired_count],
+    )
+
     mcq_correct = 0
     open_ended_correct = 0
-    
-    # Iterate through both histories in sync to avoid indexing issues
-    for q, is_correct in zip(state.question_history, state.answer_correctness_history):
-        if q.question_type == "mcq" and is_correct:
-            mcq_correct += 1
-        elif q.question_type == "open_ended" and is_correct:
-            open_ended_correct += 1
-    
-    # Calculate difficulty-wise performance
+
     difficulty_performance = {
         "easy": {"total": 0, "correct": 0},
         "medium": {"total": 0, "correct": 0},
         "hard": {"total": 0, "correct": 0},
-        "expert": {"total": 0, "correct": 0}
+        "expert": {"total": 0, "correct": 0},
     }
-    
-    # Calculate difficulty-wise performance with safe iteration
-    for q, is_correct in zip(state.question_history, state.answer_correctness_history):
-        if q.difficulty in difficulty_performance:
-            difficulty_performance[q.difficulty]["total"] += 1
-            if is_correct:
-                difficulty_performance[q.difficulty]["correct"] += 1
-    
-    # For any remaining questions in question_history that don't have a matching answer
-    # (in case histories are out of sync), still count them in total but not correct
-    remaining_questions = len(state.question_history) - len(state.answer_correctness_history)
-    if remaining_questions > 0:
-        for q in state.question_history[-remaining_questions:]:
-            if q.difficulty in difficulty_performance:
-                difficulty_performance[q.difficulty]["total"] += 1
-    
-    # Calculate topic-wise performance
+
     topic_performance = {}
-    # Calculate topic-wise performance with safe iteration
-    for q, is_correct in zip(state.question_history, state.answer_correctness_history):
-        if q.topic not in topic_performance:
-            topic_performance[q.topic] = {"total": 0, "correct": 0}
-        topic_performance[q.topic]["total"] += 1
+
+    # Count every question, including unanswered questions.
+    for index, question in enumerate(questions):
+        has_answer = index < paired_count
+        is_correct = bool(answers[index]) if has_answer else False
+
+        if question.question_type == "mcq" and is_correct:
+            mcq_correct += 1
+        elif question.question_type == "open_ended" and is_correct:
+            open_ended_correct += 1
+
+        # Difficulty-wise metrics
+        difficulty = question.difficulty
+        if difficulty in difficulty_performance:
+            difficulty_performance[difficulty]["total"] += 1
+            if is_correct:
+                difficulty_performance[difficulty]["correct"] += 1
+
+        # Topic-wise metrics
+        topic = question.topic
+        if topic not in topic_performance:
+            topic_performance[topic] = {
+                "total": 0,
+                "correct": 0,
+            }
+
+        topic_performance[topic]["total"] += 1
         if is_correct:
-            topic_performance[q.topic]["correct"] += 1
-    
-    # Add remaining questions without answers to topic totals
-    if remaining_questions > 0:
-        for q in state.question_history[-remaining_questions:]:
-            if q.topic not in topic_performance:
-                topic_performance[q.topic] = {"total": 0, "correct": 0}
-            topic_performance[q.topic]["total"] += 1
-    
-    # Calculate overall pass/fail status and percentile estimate
-    overall_score = state.score_running / state.questions_asked if state.questions_asked > 0 else 0.0
-    passed = overall_score >= 0.7  # 70% passing threshold
-    
+            topic_performance[topic]["correct"] += 1
+
+    # Use the actual number of recorded questions for the denominator.
+    total_questions = len(questions)
+    total_correct = sum(
+        1 for result in answers[:total_questions] if result
+    )
+
+    overall_score = (
+        total_correct / total_questions
+        if total_questions > 0
+        else 0.0
+    )
+
+    passed = overall_score >= 0.7
+
     return {
         "overall": {
-            "total_questions": state.questions_asked,
+            "total_questions": total_questions,
             "mcq_total": len(mcq_questions),
             "open_ended_total": len(open_ended_questions),
-            "total_correct": state.score_running,
+            "total_correct": total_correct,
             "overall_score": overall_score,
             "passed": passed,
-            "completion_timestamp": datetime._now().isoformat()
+            "completion_timestamp": datetime.now(
+                timezone.utc
+            ).isoformat(),
         },
         "type_wise": {
             "mcq": {
@@ -83,8 +104,8 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
             "open_ended": {
                 "total": len(open_ended_questions),
                 "correct": open_ended_correct,
-            }
+            },
         },
         "difficulty_wise": difficulty_performance,
-        "topic_wise": topic_performance
+        "topic_wise": topic_performance,
     }
