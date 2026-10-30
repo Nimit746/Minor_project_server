@@ -1,9 +1,11 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from arq import create_pool
 from arq.connections import RedisSettings
+from arq.worker import Worker, create_worker
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,6 +16,8 @@ from app.core.exceptions import register_exception_handlers
 from app.core.middleware import register_middleware
 from app.db.mongodb import close_mongo_connection, connect_to_mongo
 from app.utils.graph_loader import load_graph
+
+from app.tasks.worker import WorkerSettings
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +35,15 @@ def _build_checkpointer(sync_client):
         from langgraph.checkpoint.memory import MemorySaver
 
         return MemorySaver()
+
+
+def _log_worker_exit(task: asyncio.Task) -> None:
+    """Surface a crashed in-process worker in the logs instead of failing silently."""
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        logger.error("In-process ARQ worker stopped unexpectedly", exc_info=exc)
 
 
 @asynccontextmanager
@@ -52,15 +65,37 @@ async def lifespan(app: FastAPI):
         checkpointer=_build_checkpointer(sync_client),
     )
 
-    # --- ARQ queue (optional at boot: API still starts if Redis is down) ---
+    # --- ARQ queue + in-process worker ---
+    # Render charges for Background Workers, so the worker runs inside this web
+    # service. It consumes the same Redis queue the upload endpoint writes to.
+    worker: Worker | None = None
+    worker_task: asyncio.Task | None = None
     try:
-        app.state.arq = await create_pool(RedisSettings.from_dsn(s.REDIS_URL))
+        redis_settings = RedisSettings.from_dsn(s.REDIS_URL)
+        app.state.arq = await create_pool(redis_settings)
+
+        # Reuses app/tasks/worker.py: its on_startup builds ctx["db"], ctx["resume_graph"]
+        # and ctx["roadmap_graph"], which ingest_resume / generate_roadmap need.
+        worker = create_worker(
+            WorkerSettings,
+            handle_signals=False,  # uvicorn owns SIGTERM/SIGINT
+            max_jobs=1,            # one job at a time keeps memory low
+        )
+        worker_task = asyncio.create_task(worker.async_run(), name="arq-worker")
+        worker_task.add_done_callback(_log_worker_exit)
+        logger.info("In-process ARQ worker started with functions: %s",
+                    [f.__name__ for f in WorkerSettings.functions])
     except Exception:
         logger.exception("Could not connect to Redis; upload/roadmap endpoints will return 503")
         app.state.arq = None
 
     yield
 
+    # --- shutdown ---
+    if worker is not None:
+        await worker.close()
+    if worker_task is not None:
+        worker_task.cancel()
     if getattr(app.state, "arq", None) is not None:
         await app.state.arq.aclose()
     sync_client.close()
