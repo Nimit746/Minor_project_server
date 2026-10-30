@@ -13,7 +13,7 @@ async def generate_question(state: SessionState) -> SessionState:
     # Determine question type
     question_type = get_next_question_type(state)
 
-    # Retrieve relevant chunks from this candidate's resume collection
+    # Retrieve relevant chunks
     retrieved_chunks = await retrieve_relevant_chunks(
         state.current_topic, user_id=state.candidate_id
     )
