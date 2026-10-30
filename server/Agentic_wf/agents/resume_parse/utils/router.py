@@ -1,4 +1,5 @@
 from Agentic_wf.agents.resume_parse.states import FileState
+from Agentic_wf.config import resume_collection_name
 from Agentic_wf.services import VectorStoreService, EmbeddingService
 
 # ✅ Make this a SYNC function (LangGraph requires this for conditional routers)
@@ -7,7 +8,7 @@ def check_already_ingested(state: FileState) -> str:
     try:
         document_id = state['document_id']
         user_id = state['user_id']
-        collection_name = f"user_{user_id}_resumes"
+        collection_name = resume_collection_name(user_id)
         
         embedding_service = EmbeddingService()
         vector_store = VectorStoreService(
@@ -28,7 +29,7 @@ async def run_ingestion_check(state: FileState) -> FileState:
     try:
         document_id = state['document_id']
         user_id = state['user_id']
-        collection_name = f"user_{user_id}_resumes"
+        collection_name = resume_collection_name(user_id)
         
         embedding_service = EmbeddingService()
         vector_store = VectorStoreService(

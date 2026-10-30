@@ -50,3 +50,12 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def resume_collection_name(user_id: str) -> str:
+    """Canonical Qdrant collection name for a user's resume chunks.
+
+    Single source of truth shared by the ingestion store node and every RAG
+    retrieval path so the two can never drift apart.
+    """
+    return f"user_{user_id}_resumes"
