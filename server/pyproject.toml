@@ -39,6 +39,7 @@ dependencies = [
     "bcrypt>=5.0.0",
     "python-multipart>=0.0.32",
     "langgraph-checkpoint-mongodb>=0.5.0",
+    "fastembed>=0.9.1",
 ]
 
 

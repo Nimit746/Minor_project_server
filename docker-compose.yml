@@ -6,10 +6,15 @@ services:
       - "8000:8000"
     env_file:
       - ./server/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/your_db_name
+      REDIS_URL: redis://redis:6379
     volumes:
       - uploads_data:/app/uploads
     depends_on:
       redis:
+        condition: service_healthy
+      mongo:
         condition: service_healthy
     restart: unless-stopped
     init: true
@@ -20,10 +25,15 @@ services:
     command: ["uv", "run", "arq", "app.tasks.worker.WorkerSettings"]
     env_file:
       - ./server/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/interview_db
+      REDIS_URL: redis://redis:6379
     volumes:
       - uploads_data:/app/uploads
     depends_on:
       redis:
+        condition: service_healthy
+      mongo:
         condition: service_healthy
     restart: unless-stopped
     init: true
@@ -48,5 +58,21 @@ services:
       retries: 5
     restart: unless-stopped
 
+  mongo:
+    image: mongo:6-jammy
+    container_name: mongo
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
 volumes:
   uploads_data:
+  mongo_data:
