@@ -14,21 +14,26 @@ async def evaluate_answer(state: SessionState) -> SessionState:
         return {"is_correct": False, "answer_correctness_history": state.answer_correctness_history}
     
     is_correct = False
-    
+    numeric_score: float = 0.0
+
     # Evaluate based on question type
     if state.question.question_type == "mcq":
         # Exact match for MCQ (free, no LLM cost)
         is_correct = state.candidate_answer.strip() == state.question.correct_answer.strip()
+        numeric_score = 10.0 if is_correct else 0.0
     elif state.question.question_type == "coding":
         # Run sandbox tests for coding questions (free, sandboxed execution)
         is_correct = await run_sandbox_tests(state.candidate_answer, state.question)
+        numeric_score = 10.0 if is_correct else 0.0
     elif state.question.question_type == "open_ended":
         # Use LLM judge only for open-ended questions (only LLM call in eval path)
         if state.question.rubric:
             judge_result = await groq_judge(state.candidate_answer, state.question.rubric)
-            is_correct = judge_result.score >= 5
+            numeric_score = float(judge_result.score)
+            is_correct = numeric_score >= 5
         else:
             is_correct = False
+            numeric_score = 0.0
     
     # Update state
     state.is_correct = is_correct
@@ -48,4 +53,5 @@ async def evaluate_answer(state: SessionState) -> SessionState:
         "is_correct": is_correct,
         "score_running": state.score_running,
         "answer_correctness_history": state.answer_correctness_history,
+        "last_evaluation": {"score": numeric_score, "is_correct": is_correct},
     }
