@@ -19,7 +19,8 @@ class SessionState(BaseModel):
     # Stage 3 fields
     question_history: list[Question] = []
     answer_history: list[str] = []
-    score_running: int = 0
+    score_running: float = 0.0
+    score_history: list[float] = []
     questions_asked: int = 0
     
     # Stage 4 fields

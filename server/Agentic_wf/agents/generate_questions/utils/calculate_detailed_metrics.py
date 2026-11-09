@@ -14,6 +14,7 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
 
     questions = state.question_history
     answers = state.answer_correctness_history
+    scores = getattr(state, "score_history", [])
 
     mcq_questions = [
         q for q in questions if q.question_type == "mcq"
@@ -24,19 +25,15 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
 
     # Pair each question with its corresponding correctness result.
     paired_count = min(len(questions), len(answers))
-    paired_results = zip(
-        questions[:paired_count],
-        answers[:paired_count],
-    )
 
     mcq_correct = 0
     open_ended_correct = 0
 
     difficulty_performance = {
-        "easy": {"total": 0, "correct": 0},
-        "medium": {"total": 0, "correct": 0},
-        "hard": {"total": 0, "correct": 0},
-        "expert": {"total": 0, "correct": 0},
+        "easy": {"total": 0, "correct": 0, "score": 0.0},
+        "medium": {"total": 0, "correct": 0, "score": 0.0},
+        "hard": {"total": 0, "correct": 0, "score": 0.0},
+        "expert": {"total": 0, "correct": 0, "score": 0.0},
     }
 
     topic_performance = {}
@@ -45,16 +42,18 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
     for index, question in enumerate(questions):
         has_answer = index < paired_count
         is_correct = bool(answers[index]) if has_answer else False
+        q_score = float(scores[index]) if index < len(scores) else (10.0 if is_correct else 0.0)
 
         if question.question_type == "mcq" and is_correct:
             mcq_correct += 1
-        elif question.question_type == "open_ended" and is_correct:
+        elif question.question_type == "open_ended" and (is_correct or q_score >= 5.0):
             open_ended_correct += 1
 
         # Difficulty-wise metrics
         difficulty = question.difficulty
         if difficulty in difficulty_performance:
             difficulty_performance[difficulty]["total"] += 1
+            difficulty_performance[difficulty]["score"] += q_score
             if is_correct:
                 difficulty_performance[difficulty]["correct"] += 1
 
@@ -64,9 +63,11 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
             topic_performance[topic] = {
                 "total": 0,
                 "correct": 0,
+                "score": 0.0,
             }
 
         topic_performance[topic]["total"] += 1
+        topic_performance[topic]["score"] += q_score
         if is_correct:
             topic_performance[topic]["correct"] += 1
 
@@ -76,21 +77,33 @@ def calculate_detailed_metrics(state: SessionState) -> dict:
         1 for result in answers[:total_questions] if result
     )
 
-    overall_score = (
-        total_correct / total_questions
-        if total_questions > 0
-        else 0.0
-    )
+    # If partial scores are available, calculate overall score proportionately
+    if scores and total_questions > 0:
+        total_earned = sum(float(s) for s in scores[:total_questions])
+        overall_score = round(total_earned / (total_questions * 10.0), 4)
+    else:
+        overall_score = (
+            total_correct / total_questions
+            if total_questions > 0
+            else 0.0
+        )
 
     passed = overall_score >= 0.7
 
+    score_percentage = round(overall_score * 100, 1)
+
     return {
+        "score": score_percentage,
+        "readiness_score": score_percentage,
+        "overall_score": overall_score,
+        "passed": passed,
         "overall": {
             "total_questions": total_questions,
             "mcq_total": len(mcq_questions),
             "open_ended_total": len(open_ended_questions),
             "total_correct": total_correct,
             "overall_score": overall_score,
+            "score": score_percentage,
             "passed": passed,
             "completion_timestamp": datetime.now(
                 timezone.utc
