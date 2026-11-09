@@ -39,6 +39,7 @@ class SessionState(BaseModel):
     final_session_score: float | None = None
     updated_historical_avg: float | None = None
     consolidated_metrics: dict | None = None  # Stores consolidated mock test results
+    final_report: dict | None = None          # Final metrics report from finalize_session
     
     # Analytics fields
     difficulty_history: list[int] = []  # Tracks progression of difficulty levels (1-5 scale)
