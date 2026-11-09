@@ -12,7 +12,9 @@ async def interrupt_for_answer(state: SessionState) -> SessionState:
         "question_id": state.question.id,
         "question_text": state.question.question_text,
         "options": state.question.options,
-        "question_type": state.question.question_type
+        "question_type": state.question.question_type,
+        "topic": state.question.topic,
+        "difficulty": state.question.difficulty,
     })
     
     # Update state with the received answer
