@@ -157,9 +157,21 @@ class InterviewService:
             )
 
         summary = self._extract_summary(out)
+
+        # Fix 1: extract weak_topics and concept_gaps from the finished graph state
+        # and persist them on the session document so the roadmap agent can read them.
+        weak_topics = out.get("weak_topics", []) if isinstance(out, dict) else []
+        concept_gaps = out.get("concept_gaps", []) if isinstance(out, dict) else []
+        all_weak = list(set((weak_topics or []) + (concept_gaps or [])))
+
         updated = await self.col.find_one_and_update(
             {"uuid": session_uuid},
-            {"$set": {"status": "completed", "summary": summary, "updated_at": _now()}},
+            {"$set": {
+                "status": "completed",
+                "summary": summary,
+                "weak_topics": all_weak,
+                "updated_at": _now(),
+            }},
             return_document=ReturnDocument.AFTER,
         )
         return InterviewTurnResponse(

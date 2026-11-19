@@ -35,6 +35,7 @@ class RoadmapSection(BaseModel):
 class Roadmap(BaseModel):
     # Candidate context inputs
     candidate_id: str = ""
+    session_id: str = ""          # uuid of the interview_sessions document that triggered this roadmap
     target_role: str | None = None
     available_hours_per_day: float = 2.0
     target_date: str | None = None

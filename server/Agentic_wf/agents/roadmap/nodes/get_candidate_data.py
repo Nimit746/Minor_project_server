@@ -24,43 +24,48 @@ async def get_candidate_data(state: Roadmap) -> Dict[str, Any]:
     try:
         # Fetch candidate profile
         profile = await fetch_candidate_profile(candidate_id)
-        
-        # Fetch session history if available
-        sessions = []
-        try:
-            db = get_async_db()
-            cursor = db.sessions.find({"candidate_id": candidate_id}).sort("timestamp", -1).limit(10)
-            sessions = await cursor.to_list(length=10)
-        except Exception:
-            pass
+
+        # Fix 3 (Option B): read weak_topics directly from the specific triggering
+        # session document in the correct collection ("interview_sessions"), scoped
+        # to the session that caused this roadmap to be generated.
+        # This replaces the broken scan of the non-existent "sessions" collection.
+        db = get_async_db()
+        session_weak: list = []
+        if state.session_id:
+            try:
+                session_doc = await db["interview_sessions"].find_one(
+                    {"uuid": state.session_id},
+                    {"weak_topics": 1, "summary": 1},
+                )
+                if session_doc:
+                    session_weak = session_doc.get("weak_topics", []) or []
+            except Exception:
+                pass
 
         if profile:
             weak_topics = profile.get("weak_topics", []) or []
             strengths = profile.get("strengths", []) or []
             target_role = state.target_role or profile.get("target_role")
-            
-            # Check for concept gaps or weak areas from session history
-            for s in sessions:
-                if "weak_topics" in s and isinstance(s["weak_topics"], list):
-                    for wt in s["weak_topics"]:
-                        if wt not in weak_topics:
-                            weak_topics.append(wt)
-                if "concept_gaps" in s and isinstance(s["concept_gaps"], list):
-                    for cg in s["concept_gaps"]:
-                        if cg not in weak_topics:
-                            weak_topics.append(cg)
+
+            # Merge weak topics from the triggering session (Fix 3 Option B)
+            for wt in session_weak:
+                if wt not in weak_topics:
+                    weak_topics.append(wt)
 
             # Determine if we have specific weaknesses or need universal
             is_universal = len(weak_topics) == 0
 
-            updates["performance_data"] = sessions
+            updates["performance_data"] = [session_doc] if session_doc else []
             updates["weak_topics"] = weak_topics
             updates["strengths"] = strengths
             updates["is_universal"] = is_universal
             if target_role and not state.target_role:
                 updates["target_role"] = target_role
         else:
-            updates["is_universal"] = True
+            # No candidate profile yet — still try to use session weak topics
+            is_universal = len(session_weak) == 0
+            updates["weak_topics"] = session_weak
+            updates["is_universal"] = is_universal
 
     except Exception as e:
         updates["errors"] = [f"Failed to fetch candidate data: {str(e)}"]

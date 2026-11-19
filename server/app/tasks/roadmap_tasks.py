@@ -13,9 +13,13 @@ def _roadmap_state(session: dict) -> dict:
     """ADAPTER: input state for the roadmap graph (match Agentic_wf/.../roadmap/states/roadmap.py)."""
     return {
         "session_id": session["uuid"],
+        # Fix 2: candidate_id == user_uuid (load_candidate_profile stores the profile
+        # under {"candidate_id": user.uuid}). Without this, get_candidate_data
+        # short-circuits to is_universal=True immediately.
+        "candidate_id": session["user_uuid"],
         "user_id": session["user_uuid"],
         "resume_id": session["resume_uuid"],
-        "role": session["role"],
+        "target_role": session.get("role"),          # aligned to Roadmap.target_role
         "company": session.get("target_company"),
     }
 
