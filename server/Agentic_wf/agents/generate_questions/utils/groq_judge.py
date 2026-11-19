@@ -1,4 +1,6 @@
 
+import re
+
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
@@ -53,7 +55,21 @@ async def groq_judge(question: str, answer: str) -> Judge:
 
     chain = prompt | structured_llm
 
-    return await chain.ainvoke({
-        "question": question,
-        "answer": answer,
-    })
+    try:
+        return await chain.ainvoke({
+            "question": question,
+            "answer": answer,
+        })
+    except Exception as e:
+        # Groq sometimes embeds the score inside the critique text instead of
+        # emitting it as a separate field, causing a schema validation 400.
+        # Parse it out and reconstruct a valid Judge object.
+        raw = str(e)
+        score_match = re.search(r"[Ss]core[:\s]+(\d+(?:\.\d+)?)", raw)
+        critique_match = re.search(r'"critique"\s*:\s*"(.*?)"(?=\s*[,}])', raw, re.DOTALL)
+        if score_match:
+            return Judge(
+                score=min(10, max(0, int(float(score_match.group(1))))),
+                critique=critique_match.group(1) if critique_match else "Evaluation partially failed.",
+            )
+        raise
