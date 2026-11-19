@@ -3,7 +3,10 @@ from Agentic_wf.agents.generate_questions.states.question import Question
 
 class SessionState(BaseModel):
     # Candidate & Session Inputs
+    session_id: str | None = None
     candidate_id: str | None = None
+    user_id: str | None = None
+    resume_id: str | None = None
     resume_file_url: str | None = None  # URL to the resume file
     resume_text: str | None = None
     company_name: str | None = None

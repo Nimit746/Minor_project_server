@@ -34,5 +34,6 @@ class InterviewSessionModel(BaseModel):
     status: Literal['active','completed','abandoned','failed'] = 'active'
     turns: list[Turn] = Field(default_factory=list)
     summary: dict | None = None
+    weak_topics: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=_now)
     updated_at: datetime = Field(default_factory=_now)

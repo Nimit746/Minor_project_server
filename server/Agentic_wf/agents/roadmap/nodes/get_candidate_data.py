@@ -31,14 +31,21 @@ async def get_candidate_data(state: Roadmap) -> Dict[str, Any]:
         # This replaces the broken scan of the non-existent "sessions" collection.
         db = get_async_db()
         session_weak: list = []
+        session_doc = None
         if state.session_id:
             try:
                 session_doc = await db["interview_sessions"].find_one(
                     {"uuid": state.session_id},
-                    {"weak_topics": 1, "summary": 1},
+                    {"weak_topics": 1, "summary": 1, "turns": 1},
                 )
                 if session_doc:
                     session_weak = session_doc.get("weak_topics", []) or []
+                    # Fallback: if session weak_topics is empty, extract topics with score < 7.0 from turns
+                    if not session_weak and session_doc.get("turns"):
+                        session_weak = list({
+                            t.get("topic") for t in session_doc["turns"]
+                            if t.get("score") is not None and t["score"] < 7.0 and t.get("topic")
+                        })
             except Exception:
                 pass
 

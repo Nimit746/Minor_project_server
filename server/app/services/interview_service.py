@@ -159,10 +159,18 @@ class InterviewService:
         summary = self._extract_summary(out)
 
         # Fix 1: extract weak_topics and concept_gaps from the finished graph state
-        # and persist them on the session document so the roadmap agent can read them.
-        weak_topics = out.get("weak_topics", []) if isinstance(out, dict) else []
-        concept_gaps = out.get("concept_gaps", []) if isinstance(out, dict) else []
+        # (handling dict or Pydantic state) and persist them on the session document.
+        weak_topics = out.get("weak_topics", []) if isinstance(out, dict) else getattr(out, "weak_topics", [])
+        concept_gaps = out.get("concept_gaps", []) if isinstance(out, dict) else getattr(out, "concept_gaps", [])
         all_weak = list(set((weak_topics or []) + (concept_gaps or [])))
+
+        # Fallback to session turns if graph state didn't yield any weak topics
+        doc = await self.col.find_one({"uuid": session_uuid}, {"turns": 1})
+        if not all_weak and doc and doc.get("turns"):
+            all_weak = list({
+                t.get("topic") for t in doc["turns"]
+                if t.get("score") is not None and t["score"] < 7.0 and t.get("topic")
+            })
 
         updated = await self.col.find_one_and_update(
             {"uuid": session_uuid},
