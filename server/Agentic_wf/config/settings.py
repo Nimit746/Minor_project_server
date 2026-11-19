@@ -37,7 +37,12 @@ class Settings(BaseSettings):
 
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_pass: str | None = None
-    mongo_db_name: str = "interview_prep"
+    mongo_db_name: str = "interview_db"
+    mongodb_db_name: str | None = None
+
+    @property
+    def resolved_mongo_db(self) -> str:
+        return self.mongodb_db_name or self.mongo_db_name or "interview_db"
 
 
 

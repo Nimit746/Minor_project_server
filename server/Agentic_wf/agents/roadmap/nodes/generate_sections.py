@@ -21,6 +21,24 @@ def _classify_resource_type(title: str, url: str) -> str:
     return "tutorial"
 
 
+BLOCKED_PATTERNS = (
+    "dictionary", "chiebukuro", "merriam-webster", "collinsdictionary",
+    "thefreedictionary", "cambridge.org/dictionary", "yahoo.co.jp",
+    "particle_decay", "radioactive_decay", "adult", "missav"
+)
+
+
+def _is_valid_learning_resource(title: str, url: str) -> bool:
+    u = (url or "").lower()
+    t = (title or "").lower()
+    if any(b in u or b in t for b in BLOCKED_PATTERNS):
+        return False
+    # Reject non-ASCII/foreign character spam in titles
+    if any(ord(c) > 0x3000 for c in title):
+        return False
+    return True
+
+
 async def enrich_single_section(section: dict) -> tuple[dict, list[dict]]:
     """
     Executes web searches for a single section's search queries and structures top resources.
@@ -46,9 +64,9 @@ async def enrich_single_section(section: dict) -> tuple[dict, list[dict]]:
     curated_resources: List[dict] = []
     for r in raw_search_results:
         url = r.get("href") or r.get("url", "")
-        if url and url not in seen_urls:
+        title = r.get("title", "Recommended Learning Resource")
+        if url and url not in seen_urls and _is_valid_learning_resource(title, url):
             seen_urls.add(url)
-            title = r.get("title", "Recommended Learning Resource")
             body = (r.get("body", "") or "").strip()
             res_type = _classify_resource_type(title, url)
             

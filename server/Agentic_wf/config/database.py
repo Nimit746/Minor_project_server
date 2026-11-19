@@ -25,7 +25,7 @@ def get_async_client() -> AsyncIOMotorClient:
 def get_async_db() -> AsyncIOMotorDatabase:
     """Get async MongoDB database instance."""
     client = get_async_client()
-    return client[settings.mongo_db_name]
+    return client[settings.resolved_mongo_db]
 
 
 def get_sync_client() -> MongoClient:
@@ -45,4 +45,4 @@ def get_db() -> AsyncIOMotorDatabase:
 def get_sync_db() -> Database:
     """Get synchronous MongoDB database instance."""
     client = get_sync_client()
-    return client[settings.mongo_db_name]
+    return client[settings.resolved_mongo_db]

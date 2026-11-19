@@ -47,10 +47,11 @@ async def analyze_topics(state: Roadmap) -> Dict[str, Any]:
         response = await llm.ainvoke(messages)
         parsed = parse_json_safely(response.content, default={})
 
+        resolved_is_universal = False if weak_topics else parsed.get("is_universal", is_universal)
         return {
             "learning_profile": parsed.get("learning_profile", {}),
             "prioritized_topics": parsed.get("prioritized_topics", []),
-            "is_universal": parsed.get("is_universal", is_universal),
+            "is_universal": resolved_is_universal,
         }
     except Exception as e:
         fallback_profile = {
